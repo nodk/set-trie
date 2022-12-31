@@ -1,0 +1,7 @@
+{
+    "python.testing.pytestArgs": [
+        "set_trie"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
