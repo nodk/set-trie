@@ -84,7 +84,7 @@ class _Node(Generic[T, V]):
 
     def __init__(self, label):
         self.label = label
-        self.children = []
+        self.children: List[_Node] = []
 
     def _find_children(self, label):
         return _first_true(self.children, None, lambda _n: _n.label == label)
@@ -130,7 +130,7 @@ class _Node(Generic[T, V]):
         end if
         """
         w_ce = word.current_element()
-        _logger.debug("{},{}".format(w_ce, self.is_last))
+        _logger.debug(w_ce)
         if w_ce is not None:
             match_node = self._find_children(w_ce)
             if match_node is None:
@@ -240,7 +240,8 @@ class SetTrie(Generic[T]):
         Args:
             word (_Word[T]): _description_
         """
-        self.root_node.insert(word)
+        _w = word.copy(word)
+        self.root_node.insert(_w)
 
     def search(self, word: _Word[T]):
         """_summary_
@@ -263,7 +264,8 @@ class SetTrie(Generic[T]):
         Returns:
             _type_: _description_
         """
-        return _exist_subset(self.root_node, word)
+        _w = word.copy(word)
+        return _exist_subset(self.root_node, _w)
 
     def create_word(self, content: List[T]):
         """_summary_
