@@ -75,24 +75,39 @@ def test_set_trie_search(set_trie_ins: SetTrie[str]):
     logger.debug(set_trie_ins.to_str())
     assert set_trie_ins.search(abc) is True
 
-class TestSetTrieExistSubset:
-    def test_set_trie_exist_subset_1(self, set_trie_ins: SetTrie[str]):
+class TestSetTrieExistsSubset:
+    def test_set_trie_exists_subset_1(self, set_trie_ins: SetTrie[str]):
         abc = set_trie_ins.create_word(["a", "b", "c"])
         set_trie_ins.insert(set_trie_ins.create_word(["a", "b", "c", "d"]))
         set_trie_ins.insert(set_trie_ins.create_word(["a", "b", "e", "f"]))
-        assert set_trie_ins.exist_subset(abc) is False
+        assert set_trie_ins.exists_subset(abc) is False
         
         set_trie_ins.insert(set_trie_ins.create_word(["a", "b"]))
-        assert set_trie_ins.exist_subset(abc) is True
+        assert set_trie_ins.exists_subset(abc) is True
     
-    def test_set_trie_exist_subset_2(self, set_trie_ins: SetTrie[str]):
+    def test_set_trie_exists_subset_2(self, set_trie_ins: SetTrie[str]):
         abc = set_trie_ins.create_word(["a", "b", "c"])
         set_trie_ins.insert(set_trie_ins.create_word(["b", "d"]))
-        assert set_trie_ins.exist_subset(abc) is False
+        assert set_trie_ins.exists_subset(abc) is False
     
         set_trie_ins.insert(set_trie_ins.create_word(["d"]))
-        assert set_trie_ins.exist_subset(abc) is False
+        assert set_trie_ins.exists_subset(abc) is False
     
         set_trie_ins.insert(set_trie_ins.create_word(["b"]))
-        assert set_trie_ins.exist_subset(abc) is True
+        assert set_trie_ins.exists_subset(abc) is True
 
+class TestSetTrieExistsSuperset:
+    def test_set_trie_exists_superset_1(self, set_trie_ins: SetTrie[str]):
+        abc = set_trie_ins.create_word(["a", "b", "c"])
+        set_trie_ins.insert(set_trie_ins.create_word(["a", "b"]))
+        set_trie_ins.insert(set_trie_ins.create_word(["a"]))
+        set_trie_ins.insert(set_trie_ins.create_word(["a", "b", "e", "f"]))
+        assert set_trie_ins.exists_subset(abc) is False
+        
+        set_trie_ins.insert(set_trie_ins.create_word(["a", "b", "c", "d"]))
+        assert set_trie_ins.exists_subset(abc) is True
+    
+    def test_set_trie_exists_superset_2(self, set_trie_ins: SetTrie[str]):
+        abc = set_trie_ins.create_word(["a", "b", "c"])
+        set_trie_ins.insert(set_trie_ins.create_word(["0","a","b","c"]))
+        assert set_trie_ins.exists_subset(abc) is True

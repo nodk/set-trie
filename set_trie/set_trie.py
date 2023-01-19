@@ -30,6 +30,8 @@ def _first_true(iterable: Iterable[T], default=False, pred=None) -> T:
     If *pred* is not None, returns the first item
     for which pred(item) is true.
 
+    Copied from official python docs.
+    https://docs.python.org/ja/3/library/itertools.html
     """
     return next(filter(pred, iterable), default)
 
@@ -165,7 +167,7 @@ class _Node(Generic[T, V]):
             return ret
 
 
-def _exist_subset(node: _Node[T, V], word: _Word[T]) -> bool:
+def _exists_subset(node: _Node[T, V], word: _Word[T]) -> bool:
     """
     if (node.last_flag == true) then
         return true;
@@ -193,14 +195,14 @@ def _exist_subset(node: _Node[T, V], word: _Word[T]) -> bool:
     next_node = node._find_children(w_ce)
     if next_node is not None:
         # use copied iterator for
-        found = _exist_subset(next_node, _Word.copy(word))
+        found = _exists_subset(next_node, _Word.copy(word))
     if not found:
-        return _exist_subset(node, word)
+        return _exists_subset(node, word)
     else:
         return True
 
 
-def _exist_superset(node: _Node[T, V], word: _Word[T]):
+def _exists_superset(node: _Node[T, V], word: _Word[T]):
     """
     if (not word.existsCurrentElement) then
         return true;
@@ -216,13 +218,23 @@ def _exist_superset(node: _Node[T, V], word: _Word[T]):
         end if
     end for
     """
-    w_ce = word.current_element()
-    if w_ce is None:
+    _w0 = word.copy(word)
+    lb = word.current_element()
+    _w1 = word.copy(word)
+    if lb is None:
         return False
     found = False
-    w_ne = word.current_element()
-
-    pass
+    ub = word.current_element()
+    itr:Iterable[_Node] = filter(lambda c:c > lb, node.children)
+    while not found:
+        child = next(itr, None)
+        if child is None or child.label > ub:
+            break
+        if child.label == ub:
+            found = _exists_superset(child,_w1)
+        else:
+            found = _exists_superset(child,_w0)
+    return found
 
 
 class SetTrie(Generic[T]):
@@ -255,7 +267,7 @@ class SetTrie(Generic[T]):
         _w = word.copy(word)
         return self.root_node.search(_w)
 
-    def exist_subset(self, word):
+    def exists_subset(self, word):
         """_summary_
 
         Args:
@@ -265,7 +277,19 @@ class SetTrie(Generic[T]):
             _type_: _description_
         """
         _w = word.copy(word)
-        return _exist_subset(self.root_node, _w)
+        return _exists_subset(self.root_node, _w)
+
+    def exists_superset(self, word):
+        """_summary_
+
+        Args:
+            word (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        _w = word.copy(word)
+        return _exists_superset(self.root_node, _w)
 
     def create_word(self, content: List[T]):
         """_summary_
