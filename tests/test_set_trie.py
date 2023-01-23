@@ -102,12 +102,12 @@ class TestSetTrieExistsSuperset:
         set_trie_ins.insert(set_trie_ins.create_word(["a", "b"]))
         set_trie_ins.insert(set_trie_ins.create_word(["a"]))
         set_trie_ins.insert(set_trie_ins.create_word(["a", "b", "e", "f"]))
-        assert set_trie_ins.exists_subset(abc) is False
+        assert set_trie_ins.exists_superset(abc) is False
         
         set_trie_ins.insert(set_trie_ins.create_word(["a", "b", "c", "d"]))
-        assert set_trie_ins.exists_subset(abc) is True
+        assert set_trie_ins.exists_superset(abc) is True
     
     def test_set_trie_exists_superset_2(self, set_trie_ins: SetTrie[str]):
         abc = set_trie_ins.create_word(["a", "b", "c"])
         set_trie_ins.insert(set_trie_ins.create_word(["0","a","b","c"]))
-        assert set_trie_ins.exists_subset(abc) is True
+        assert set_trie_ins.exists_superset(abc) is True
