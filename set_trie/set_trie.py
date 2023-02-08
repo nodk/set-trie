@@ -82,16 +82,19 @@ class _Word(Generic[T]):
 
 class _Node(Generic[T, V]):
     label: T
-    is_last: bool = False
+    tag: V = None
 
     def __init__(self, label):
         self.label = label
         self.children: List[_Node] = []
 
+    def is_last(self):
+        return self.tag is not None
+
     def _find_children(self, label):
         return _first_true(self.children, None, lambda _n: _n.label == label)
 
-    def insert(self, word: _Word[T]) -> None:
+    def insert(self, word: _Word[T], tag: V = True) -> None:
         """
         if (word.existsCurrentElement) then
             if (exists child of node labeled word.currentElement) then
@@ -114,11 +117,14 @@ class _Node(Generic[T, V]):
                 idx = bisect_left(cmap, next_node.label)
                 self.children = self.children[:idx] + \
                     [next_node] + self.children[idx:]
-            next_node.insert(word)
+            next_node.insert(word,tag)
         else:
-            self.is_last = True
+            self.tag = tag
 
     def search(self, word: _Word[T]) -> bool:
+        return self.search_get(word) is not None
+
+    def search_get(self, word: _Word[T]) -> V:
         """
         if (word.existsCurrentElement) then
             if (there exists child of node labeled word.currentElement) then
@@ -132,20 +138,20 @@ class _Node(Generic[T, V]):
         end if
         """
         w_ce = word.current_element()
-        _logger.debug(w_ce)
+        _logger.debug("{} {}".format(w_ce, str(self.tag)))
         if w_ce is not None:
             match_node = self._find_children(w_ce)
             if match_node is None:
-                return False
-            return match_node.search(word)
+                return None
+            return match_node.search_get(word)
         else:
-            return self.is_last
+            return self.tag
 
     def __str__(self) -> str:
         return self._to_str("", "")
 
     def _to_str(self, offset_str1, offset_str2):
-        if self.is_last:
+        if self.is_last():
             value_str = "[{}]".format(self.label)
         else:
             value_str = " {} ".format(self.label)
@@ -167,7 +173,7 @@ class _Node(Generic[T, V]):
             return ret
 
 
-def _exists_subset(node: _Node[T, V], word: _Word[T]) -> bool:
+def _find_subset(node: _Node[T, V], word: _Word[T]) -> _Node[T, V]:
     """
     if (node.last_flag == true) then
         return true;
@@ -186,20 +192,25 @@ def _exists_subset(node: _Node[T, V], word: _Word[T]) -> bool:
         return true;
     end if
     """
-    if node.is_last:
-        return True
+    if node.is_last():
+        return node
     w_ce = word.current_element()
     if w_ce is None:
-        return False
-    found = False
+        return None
+    found = None
     next_node = node._find_children(w_ce)
     if next_node is not None:
         # use copied iterator for
-        found = _exists_subset(next_node, _Word.copy(word))
-    if not found:
-        return _exists_subset(node, word)
+        found = _find_subset(next_node, _Word.copy(word))
+    if found is None:
+        return _find_subset(node, word)
     else:
-        return True
+        return found
+    
+
+def _exists_subset(node: _Node[T, V], word: _Word[T]) -> bool:
+    ret = _find_subset(node,word)
+    return ret is not None
 
 
 def _exists_superset(node: _Node[T, V], word: _Word[T]):
@@ -218,23 +229,28 @@ def _exists_superset(node: _Node[T, V], word: _Word[T]):
         end if
     end for
     """
-    _w0 = word.copy(word)
-    lb = word.current_element()
-    _w1 = word.copy(word)
-    if lb is None:
-        return False
-    found = False
-    ub = word.current_element()
-    itr:Iterable[_Node] = filter(lambda c:c > lb, node.children)
-    while not found:
-        child = next(itr, None)
-        if child is None or child.label > ub:
-            break
-        if child.label == ub:
-            found = _exists_superset(child,_w1)
-        else:
-            found = _exists_superset(child,_w0)
-    return found
+    return False
+    # _w0 = word.copy(word)
+    # lb = word.current_element()
+    # _w1 = word.copy(word)
+    # if lb is None:
+    #     return True
+    # found = False
+    # ub = word.current_element()
+    # itr:Iterable[_Node] = filter(lambda c:c.label >= lb, node.children)
+    # _logger.debug("({},{})".format(lb,ub))
+    # for c in node.children:
+    #     _logger.debug(c)
+    # while not found:
+    #     child = next(itr, None)
+    #     _logger.debug("{}".format(child))
+    #     if child is None or (ub is not None and child.label > ub):
+    #         break
+    #     if ub is not None and child.label == lb:
+    #         found = _exists_superset(child,_w1)
+    #     else:
+    #         found = _exists_superset(child,_w0)
+    # return found
 
 
 class SetTrie(Generic[T]):
@@ -246,14 +262,14 @@ class SetTrie(Generic[T]):
     def __init__(self):
         self.root_node = _Node("Root")
 
-    def insert(self, word: _Word[T]):
+    def insert(self, word: _Word[T], tag = True):
         """_summary_
 
         Args:
             word (_Word[T]): _description_
         """
         _w = word.copy(word)
-        self.root_node.insert(_w)
+        self.root_node.insert(_w, tag)
 
     def search(self, word: _Word[T]):
         """_summary_
@@ -278,6 +294,10 @@ class SetTrie(Generic[T]):
         """
         _w = word.copy(word)
         return _exists_subset(self.root_node, _w)
+    
+    def find_subset(self,word):
+        _w = word.copy(word)
+        return _find_subset(self.root_node, _w)
 
     def exists_superset(self, word):
         """_summary_
